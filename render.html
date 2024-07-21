@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dynamically Generated Layout</title>
+    <style>
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .row {
+            display: flex;
+            flex-basis: auto; /* Adjust based on content */
+        }
+        .square {
+            width: 100px;
+            height: 100px;
+            border: 0px solid #000;
+            box-sizing: border-box; /* Include border in the total width and height */
+        }
+        .black-square {
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+    <div id="layoutContainer" class="container"></div>
+    <script>
+        const room1 = [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1],[1,null,null,null,null,null,null,null,null,null,null,null,1],[1,null,null,null,null,1,1,1,null,null,null,null,1],[1,null,null,null,null,1,1,1,null,null,null,null,1],[1,null,null,null,null,null,null,null,null,null,null,null,1],[1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+        
+        
+        function generateLayout() {
+            const rooms = [room1];
+            return rooms[Math.floor(Math.random() * rooms.length)];
+        }
+
+        function createLayout(layout) {
+            const container = document.getElementById('layoutContainer');
+            container.innerHTML = ''; // Clear existing layout
+            layout.forEach((layer, layerIndex) => {
+                const rowDiv = document.createElement('div'); // Create a div for each row
+                rowDiv.classList.add('row'); // Assign the row class
+                layer.forEach((value, columnIndex) => {
+                    const square = document.createElement('div');
+                    square.classList.add('square');
+                    if (value === 1) {
+                        square.classList.add('black-square');
+                    }
+                    rowDiv.appendChild(square); // Append the square to the current row
+                });
+                container.appendChild(rowDiv); // Append the row to the container
+            });
+        }
+
+        window.onload = function() {
+            const layout = generateLayout();
+            createLayout(layout);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Roomtool Pixaldungeon</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: dimgrey;
+        }
+        #dungeon-grid {
+            display: grid;
+            grid-template-columns: repeat(13, 40px);
+            grid-template-rows: repeat(6, 40px);
+            gap: 5px;
+            margin-bottom: 50px; /* Space for the bottom bar */
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            background-color: #ccc;
+            cursor: pointer;
+        }
+        .tile-placed {
+            border: 2px solid #000; /* Visual indicator for placed tile */
+        }
+        #bottom-bar {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 780px; /* Example maximum width */
+        }
+        .tile {
+            width: 40px;
+            height: 40px;
+            background-color: #ddd;
+            margin: 5px;
+            cursor: grab;
+        }
+        /* Define CSS classes for dynamic color assignment */
+        .white {
+            background-color: white;
+        }
+        .red {
+            background-color: red;
+        }
+        .blue {
+            background-color: blue;
+        }
+        .green {
+            background-color: green;
+        }
+        .yellow {
+            background-color: yellow;
+        }
+        /* Add more colors as needed */
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        $(function() {
+            // Initialize the grid with empty cells
+            for (let i = 0; i < 78; i++) {
+                $('#dungeon-grid').append('<div class="cell"></div>');
+            }
+
+            // Create draggable tiles with IDs and colors
+            const colors = ['white', 'red', 'blue', 'green', 'yellow']; // Include white as the first color
+            let nextTileId = 0; // Start ID counter at 0 for the white tile
+            for (let i = 0; i < colors.length; i++) { // Loop through each color
+                let tileColor = colors[i];
+                $('#bottom-bar').append(`<div id="${nextTileId}" class="tile ${tileColor}">${tileColor}</div>`); // Assign ID directly without quotation marks
+                nextTileId++; // Increment ID for each tile
+            }
+
+            // Initialize room layout tracking
+            const roomLayout = Array(6).fill().map(() => Array(13).fill(null)); // 6 rows x 13 columns
+
+            // Make cells droppable and handle click actions for removing tiles
+            $('.cell').droppable({
+                accept: '.tile',
+                drop: function(event, ui) {
+                    const tileId = parseInt(ui.draggable.attr("id"), 10); // Ensure ID is treated as a number
+                    const $this = $(this);
+                    $this.addClass(`tile-placed ${tileId}`);
+                    $this.data('placedObject', tileId);
+                    $(ui.helper).remove();
+                    updateRoomLayout($this, tileId);
+                    alert(`Placed tile with ID: ${tileId}`);
+                },
+                over: function(event, ui) {
+                    $(this).addClass('highlight');
+                },
+                out: function(event, ui) {
+                    $(this).removeClass('highlight');
+                }
+            }).on('click', function() {
+                const tileId = $(this).data('placedObject'); // Retrieve the tile ID
+                if (tileId !== null) {
+                    $(this).removeClass(`tile-placed ${tileId}`).removeData('placedObject'); // Remove the tile
+                    updateRoomLayout($(this), null); // Update the room layout to reflect removal
+                    alert(`Removed tile with ID: ${tileId}`);
+                }
+            }).on('contextmenu', function(event) {
+    event.preventDefault(); // Prevent default context menu
+    const tileId = $(this).data('placedObject'); // Retrieve the tile ID
+    if (tileId !== null) {
+        alert(`Tile ID: ${tileId}`); // Display the tile ID
+        if (event.shiftKey) { // Check if Shift key is pressed
+            $(this).removeClass(`tile-placed ${tileId}`).removeData('placedObject'); // Remove the tile
+            updateRoomLayout($(this), null); // Update the room layout to reflect removal
+            alert(`Removed tile with ID: ${tileId}`);
+        }
+    }
+});
+
+            // Make tiles draggable
+            $('.tile').draggable({
+                helper: 'clone',
+                revert: true,
+                stop: function(event, ui) {
+                    $(ui.helper).remove();
+                }
+            });
+
+            // Function to update the room layout
+            function updateRoomLayout(cell, tileId) {
+                const row = parseInt(cell.index() / 13, 10);
+                const col = cell.index() % 13;
+                roomLayout[row][col] = tileId; // Ensure numeric ID is stored
+            }
+
+            // Function to copy the room layout to an array
+            function copyRoomLayout() {
+                const roomArray = JSON.parse(JSON.stringify(roomLayout)); // Deep copy of the room layout
+                copyToArrayToClipboard(JSON.stringify(roomArray));
+            }
+
+            // Button to trigger copying the room layout
+            $('#copy-room-layout-btn').click(function() {
+                copyRoomLayout();
+            });
+        });
+
+        // Function to copy an array to the clipboard
+        function copyToArrayToClipboard(text) {
+            try {
+                navigator.clipboard.writeText(text);
+                console.log('Copied to clipboard');
+            } catch (error) {
+                console.error('Failed to copy: ', error);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="dungeon-grid"></div>
+    <div id="bottom-bar"></div>
+    <button id="copy-room-layout-btn">Copy Room Layout</button>
+</body>
+</html>
